@@ -3,19 +3,21 @@ include 'conexion.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nombre = trim($_POST['nombre']);
-    $stock = intval($_POST['stock']);
+    $unidad_medida = trim($_POST['unidad_medida']);
+    $stock = floatval($_POST['stock']); // Usamos floatval para permitir decimales
+    $costo = floatval($_POST['precio_costo']);
     $precio = floatval($_POST['precio_unitario']);
-    $unidad_medida = trim($_POST['unidad_medida']); // <-- Nuevo campo
 
-    if (!empty($nombre) && $stock >= 0 && $precio >= 0 && !empty($unidad_medida)) {
+    if (!empty($nombre) && !empty($unidad_medida) && $stock >= 0 && $costo >= 0 && $precio >= 0) {
         try {
-            $sql = "INSERT INTO productos (nombre, stock, precio_unitario, unidad_medida) VALUES (:nombre, :stock, :precio, :unidad_medida)";
+            $sql = "INSERT INTO productos (nombre, unidad_medida, stock, precio_costo, precio_unitario) VALUES (:nombre, :unidad_medida, :stock, :costo, :precio)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 ':nombre' => $nombre,
+                ':unidad_medida' => $unidad_medida,
                 ':stock' => $stock,
-                ':precio' => $precio,
-                ':unidad_medida' => $unidad_medida
+                ':costo' => $costo,
+                ':precio' => $precio
             ]);
         } catch (PDOException $e) {
             // Manejar error si es necesario
