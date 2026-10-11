@@ -1,7 +1,7 @@
 <?php
 include 'conexion.php';
 
-// Obtener productos de la base de datos (incluyendo la unidad de medida)
+// Obtener productos de la base de datos
 $stmt = $pdo->query("SELECT id, nombre, stock, precio_unitario, unidad_medida FROM productos");
 $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -23,13 +23,14 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
     <title>Control de Negocio de Limpieza</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <header>
         <!--<h1>Control de Negocio de Limpieza La Pelu</h1> -->
     </header>
     <br><br><br><br>
-    <main class="fondo">
+ <main class="fondo">
         
         <section id="productos">
             <h2>Productos</h2>
@@ -49,9 +50,10 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                     <thead>
                         <tr>
                             <th>Nombre</th>
-                            <th>Unidad de Medida</th>
+                            <th>Unidad</th>
                             <th>Stock</th>
                             <th>Precio Unitario</th>
+                            <th>Añadir Mercadería</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -60,12 +62,26 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                         <tr>
                             <td><?php echo htmlspecialchars($prod['nombre']); ?></td>
                             <td><?php echo htmlspecialchars($prod['unidad_medida']); ?></td>
-                            <td><?php echo htmlspecialchars($prod['stock']); ?></td>
+                            <td><strong><?php echo htmlspecialchars($prod['stock']); ?></strong></td>
                             <td>$<?php echo number_format($prod['precio_unitario'], 2); ?></td>
-                            <td class="acciones-producto">
+                            
+                            <!-- Formulario rápido para sumar stock cuando llega mercadería -->
+                            <td>
+                                <form action="actualizar_stock.php" method="POST" style="display: flex; gap: 5px;">
+                                    <input type="hidden" name="id" value="<?php echo $prod['id']; ?>">
+                                    <input type="number" name="cantidad_agregada" placeholder="Cant." min="1" required style="width: 70px; margin-bottom: 0; padding: 5px;">
+                                    <button type="submit" style="background-color: #27ae60; padding: 5px 10px; font-size: 0.85rem;">+ Sumar</button>
+                                </form>
+                            </td>
+
+                            <td class="acciones-producto" style="display: flex; gap: 5px; align-items: center;">
+                                <!-- Botón Modificar -->
+                                <a href="editar_producto.php?id=<?php echo $prod['id']; ?>" style="text-decoration: none; padding: 5px 10px; background-color: #f39c12; color: white; border-radius: 4px; font-size: 0.9rem;">Editar</a>
+                                
+                                <!-- Botón Eliminar -->
                                 <form action="eliminar_producto.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de que desea eliminar este producto?');">
                                     <input type="hidden" name="id" value="<?php echo $prod['id']; ?>">
-                                    <button type="submit">Eliminar</button>
+                                    <button type="submit" style="background-color: #e74c3c;">Eliminar</button>
                                 </form>
                             </td>
                         </tr>
