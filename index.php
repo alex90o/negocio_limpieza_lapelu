@@ -1,8 +1,8 @@
 <?php
 include 'conexion.php';
 
-// Obtener productos de la base de datos
-$stmt = $pdo->query("SELECT id, nombre, stock, precio_unitario, unidad_medida FROM productos");
+// Obtener productos incluyendo precio de costo
+$stmt = $pdo->query("SELECT id, nombre, stock, precio_costo, precio_unitario, unidad_medida FROM productos");
 $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Obtener historial de ventas recientes
@@ -26,7 +26,6 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
             const primeraFila = container.querySelector('.fila-producto');
             const nuevaFila = primeraFila.cloneNode(true);
             
-            // Limpiar valores de la nueva fila clonada
             nuevaFila.querySelector('select').value = "";
             nuevaFila.querySelector('input').value = "";
             
@@ -46,20 +45,23 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
     <header>
+        
         <!--<h1>Control de Negocio de Limpieza La Pelu</h1> -->
+    
     </header>
     <br><br><br><br>
- <main class="fondo">
+    <main class="fondo">
         
         <section id="productos">
             <h2>Productos</h2>
             <div class="form-section">
                 <h3>Añadir Nuevo Producto</h3>
                 <form action="guardar_producto.php" method="POST">
-                    <input type="text" name="nombre" placeholder="Nombre del Producto (ej. Lavandina)" required>
-                    <input type="text" name="unidad_medida" placeholder="Unidad de Medida (ej. Litros, Kilos, Unidades)" required>
-                    <input type="number" name="stock" placeholder="Stock Inicial" min="0" required>
-                    <input type="number" name="precio_unitario" placeholder="Precio Unitario" min="0" step="0.01" required>
+                    <input type="text" name="nombre" placeholder="Nombre del Producto (ej. Lavandina suelta)" required>
+                    <input type="text" name="unidad_medida" placeholder="Unidad (ej. Litros, Kilos, Unidades)" required>
+                    <input type="number" name="stock" placeholder="Stock Inicial (ej. 10 o 5.5)" min="0" step="any" required>
+                    <input type="number" name="precio_costo" placeholder="Precio de Costo" min="0" step="0.01" required>
+                    <input type="number" name="precio_unitario" placeholder="Precio de Venta" min="0" step="0.01" required>
                     <button type="submit">Añadir Producto</button>
                 </form>
             </div>
@@ -71,7 +73,8 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                             <th>Nombre</th>
                             <th>Unidad</th>
                             <th>Stock</th>
-                            <th>Precio Unitario</th>
+                            <th>Precio Costo</th>
+                            <th>Precio Venta</th>
                             <th>Añadir Mercadería</th>
                             <th>Acciones</th>
                         </tr>
@@ -82,12 +85,13 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                             <td><?php echo htmlspecialchars($prod['nombre']); ?></td>
                             <td><?php echo htmlspecialchars($prod['unidad_medida']); ?></td>
                             <td><strong><?php echo htmlspecialchars($prod['stock']); ?></strong></td>
+                            <td>$<?php echo number_format($prod['precio_costo'], 2); ?></td>
                             <td>$<?php echo number_format($prod['precio_unitario'], 2); ?></td>
                             
                             <td>
                                 <form action="actualizar_stock.php" method="POST" style="display: flex; gap: 5px;">
                                     <input type="hidden" name="id" value="<?php echo $prod['id']; ?>">
-                                    <input type="number" name="cantidad_agregada" placeholder="Cant." min="1" required style="width: 70px; margin-bottom: 0; padding: 5px;">
+                                    <input type="number" name="cantidad_agregada" placeholder="Cant." min="0.001" step="any" required style="width: 70px; margin-bottom: 0; padding: 5px;">
                                     <button type="submit" style="background-color: #27ae60; padding: 5px 10px; font-size: 0.85rem;">+ Sumar</button>
                                 </form>
                             </td>
@@ -116,7 +120,7 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                     <label><strong>Nombre del Cliente:</strong></label>
                     <input type="text" name="cliente_nombre" placeholder="Nombre del cliente o consumidor final" required style="margin-bottom: 15px;">
 
-                    <label><strong>Productos de la Compra:</strong></label>
+                    <label><strong>Productos de la Compra (ej. 0.5 para medio litro/kilo):</strong></label>
                     <div id="productos-venta-container">
                         <div class="fila-producto" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <select name="producto_id[]" required style="flex: 2; margin-bottom: 0;">
@@ -130,7 +134,7 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                                 <?php endforeach; ?>
                             </select>
                             
-                            <input type="number" name="cantidad[]" placeholder="Cantidad" min="1" required style="flex: 1; margin-bottom: 0;">
+                            <input type="number" name="cantidad[]" placeholder="Cant. (ej: 0.5)" min="0.001" step="any" required style="flex: 1; margin-bottom: 0;">
                             
                             <button type="button" onclick="eliminarFilaVenta(this)" style="background-color: #e74c3c; padding: 10px; margin-bottom: 0;">X</button>
                         </div>
