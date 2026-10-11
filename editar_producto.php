@@ -1,22 +1,23 @@
 <?php
 include 'conexion.php';
 
-// Si envían el formulario de actualización
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id = intval($_POST['id']);
     $nombre = trim($_POST['nombre']);
     $unidad_medida = trim($_POST['unidad_medida']);
-    $stock = intval($_POST['stock']);
+    $stock = floatval($_POST['stock']);
+    $costo = floatval($_POST['precio_costo']);
     $precio = floatval($_POST['precio_unitario']);
 
-    if ($id > 0 && !empty($nombre) && !empty($unidad_medida) && $stock >= 0 && $precio >= 0) {
+    if ($id > 0 && !empty($nombre) && !empty($unidad_medida) && $stock >= 0 && $costo >= 0 && $precio >= 0) {
         try {
-            $sql = "UPDATE productos SET nombre = :nombre, unidad_medida = :unidad_medida, stock = :stock, precio_unitario = :precio WHERE id = :id";
+            $sql = "UPDATE productos SET nombre = :nombre, unidad_medida = :unidad_medida, stock = :stock, precio_costo = :costo, precio_unitario = :precio WHERE id = :id";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 ':nombre' => $nombre,
                 ':unidad_medida' => $unidad_medida,
                 ':stock' => $stock,
+                ':costo' => $costo,
                 ':precio' => $precio,
                 ':id' => $id
             ]);
@@ -30,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Si cargan la página con un ID por GET, buscamos los datos actuales
 $producto = null;
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
@@ -48,7 +48,6 @@ if (!$producto) {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modificar Producto - Control de Negocio</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -70,10 +69,13 @@ if (!$producto) {
             <label>Unidad de Medida:</label>
             <input type="text" name="unidad_medida" value="<?php echo htmlspecialchars($producto['unidad_medida']); ?>" required>
             
-            <label>Stock Actual:</label>
-            <input type="number" name="stock" value="<?php echo $producto['stock']; ?>" min="0" required>
+            <label>Stock Actual (permite decimales, ej: 1.5 o 0.500):</label>
+            <input type="number" name="stock" value="<?php echo $producto['stock']; ?>" min="0" step="any" required>
             
-            <label>Precio Unitario ($):</label>
+            <label>Precio de Costo ($):</label>
+            <input type="number" name="precio_costo" value="<?php echo $producto['precio_costo']; ?>" min="0" step="0.01" required>
+
+            <label>Precio de Venta ($):</label>
             <input type="number" name="precio_unitario" value="<?php echo $producto['precio_unitario']; ?>" min="0" step="0.01" required>
             
             <div style="margin-top: 15px;">
