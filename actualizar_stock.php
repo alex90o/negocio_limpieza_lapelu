@@ -3,7 +3,7 @@ include 'conexion.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $producto_id = intval($_POST['id']);
-    $cantidad_agregada = intval($_POST['cantidad_agregada']);
+    $cantidad_agregada = floatval($_POST['cantidad_agregada']);
 
     if ($producto_id > 0 && $cantidad_agregada > 0) {
         try {
