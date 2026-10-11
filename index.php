@@ -5,11 +5,11 @@ include 'conexion.php';
 $stmt = $pdo->query("SELECT id, nombre, stock, precio_costo, precio_unitario, unidad_medida FROM productos");
 $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener historial de ventas recientes
+// Obtener historial de ventas recientes (corrigiendo el alias de la venta)
 $stmtHistorial = $pdo->query("
-    SELECT v.id as venta_id, v.fecha, v.total 
-    FROM ventas v
-    ORDER BY v.fecha DESC LIMIT 10
+    SELECT id as venta_id, fecha, total 
+    FROM ventas 
+    ORDER BY fecha DESC LIMIT 10
 ");
 $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -111,7 +111,7 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </section>
 
-        <section id="ventas">
+       <section id="ventas">
             <h2>Registro de Ventas y Facturación</h2>
             <div class="form-section">
                 <h3>Registrar Venta Múltiple</h3>
@@ -155,8 +155,8 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                     <?php else: ?>
                         <?php foreach ($historial_ventas as $v): ?>
                             <li>
-                                Venta #<?php echo $v['id']; ?> &bull; Fecha: <?php echo $v['fecha']; ?> &bull; <strong>Total: $<?php echo number_format($v['total'], 2); ?></strong>
-                                <a href="ver_ticket.php?id=<?php echo $v['id']; ?>" target="_blank" style="margin-left: 15px; text-decoration: none; background: #3498db; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.85rem;">Ver Ticket</a>
+                                Venta #<?php echo $v['venta_id']; ?> &bull; Fecha: <?php echo $v['fecha']; ?> &bull; <strong>Total: $<?php echo number_format($v['total'], 2); ?></strong>
+                                <a href="ver_ticket.php?id=<?php echo $v['venta_id']; ?>" target="_blank" style="margin-left: 15px; text-decoration: none; background: #3498db; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.85rem;">Ver Ticket</a>
                             </li>
                         <?php endforeach; ?>
                     <?php endif; ?>

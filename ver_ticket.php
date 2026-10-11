@@ -2,18 +2,23 @@
 include 'conexion.php';
 
 $venta_id = intval($_GET['id'] ?? 0);
-$cliente = htmlspecialchars($_GET['cliente'] ?? 'Cliente General');
 
 if ($venta_id <= 0) {
     header("Location: index.php");
     exit();
 }
 
-// Obtener datos de la venta y sus detalles
+// Obtener datos de la venta
 $stmtVenta = $pdo->prepare("SELECT * FROM ventas WHERE id = :id");
 $stmtVenta->execute([':id' => $venta_id]);
 $venta = $stmtVenta->fetch(PDO::FETCH_ASSOC);
 
+if (!$venta) {
+    echo "<script>alert('Venta no encontrada.'); window.location.href='index.php';</script>";
+    exit();
+}
+
+// Obtener los detalles de los productos de esa venta
 $stmtDetalles = $pdo->prepare("
     SELECT dv.cantidad, dv.subtotal, p.nombre, p.precio_unitario, p.unidad_medida 
     FROM detalle_ventas dv
@@ -27,7 +32,7 @@ $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ticket de Venta - La Pelu</title>
+    <title>Ticket de Venta #<?php echo $venta['id']; ?> - La Pelu</title>
     <style>
         body {
             font-family: 'Courier New', Courier, monospace;
@@ -117,7 +122,6 @@ $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
         
         <div class="info">
             <p><strong>Fecha:</strong> <?php echo $venta['fecha']; ?></p>
-            <p><strong>Cliente:</strong> <?php echo $cliente; ?></p>
         </div>
 
         <table>
