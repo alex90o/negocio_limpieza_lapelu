@@ -13,10 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $total_venta_general = 0;
             $items_venta = [];
 
-            // 1. Validar stock y calcular total general primero
             for ($i = 0; $i < count($productos_ids); $i++) {
                 $prod_id = intval($productos_ids[$i]);
-                $cant = intval($cantidades[$i]);
+                $cant = floatval($cantidades[$i]); // Permite decimales
 
                 if ($prod_id > 0 && $cant > 0) {
                     $stmt = $pdo->prepare("SELECT nombre, precio_unitario, stock, unidad_medida FROM productos WHERE id = :id FOR UPDATE");
@@ -45,12 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 throw new Exception("No hay productos válidos en la venta.");
             }
 
-            // 2. Registrar la venta principal (Guardamos el nombre del cliente en el total o puedes agregar una columna cliente si gustas)
             $stmtVenta = $pdo->prepare("INSERT INTO ventas (total) VALUES (:total)");
             $stmtVenta->execute([':total' => $total_venta_general]);
             $venta_id = $pdo->lastInsertId();
 
-            // 3. Registrar detalles y descontar stock
             foreach ($items_venta as $item) {
                 $stmtDetalle = $pdo->prepare("INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, subtotal) VALUES (:v_id, :p_id, :cant, :sub)");
                 $stmtDetalle->execute([
@@ -68,8 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             $pdo->commit();
-
-            // Redirigir a la vista del ticket pasando el ID de la venta
             header("Location: ver_ticket.php?id=" . $venta_id . "&cliente=" . urlencode($cliente));
             exit();
 
