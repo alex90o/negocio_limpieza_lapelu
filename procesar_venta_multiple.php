@@ -2,20 +2,38 @@
 include 'conexion.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $cliente = trim($_POST['cliente_nombre'] ?? 'Cliente General');
+    $cliente_nombre = trim($_POST['cliente_nombre'] ?? 'Cliente General');
     $productos_ids = $_POST['producto_id'] ?? [];
     $cantidades = $_POST['cantidad'] ?? [];
+
+    if (empty($cliente_nombre)) {
+        $cliente_nombre = 'Cliente General';
+    }
 
     if (!empty($productos_ids)) {
         try {
             $pdo->beginTransaction();
 
+            // 1. Obtener o registrar el cliente
+            $stmtCliente = $pdo->prepare("SELECT id FROM clientes WHERE LOWER(nombre) = LOWER(:nombre)");
+            $stmtCliente->execute([':nombre' => $cliente_nombre]);
+            $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+
+            if ($cliente) {
+                $cliente_id = $cliente['id'];
+            } else {
+                $stmtInsertCliente = $pdo->prepare("INSERT INTO clientes (nombre) VALUES (:nombre)");
+                $stmtInsertCliente->execute([':nombre' => $cliente_nombre]);
+                $cliente_id = $pdo->lastInsertId();
+            }
+
             $total_venta_general = 0;
             $items_venta = [];
 
+            // 2. Validar stock y calcular sub-totales
             for ($i = 0; $i < count($productos_ids); $i++) {
                 $prod_id = intval($productos_ids[$i]);
-                $cant = floatval($cantidades[$i]); // Permite decimales
+                $cant = floatval($cantidades[$i]);
 
                 if ($prod_id > 0 && $cant > 0) {
                     $stmt = $pdo->prepare("SELECT nombre, precio_unitario, stock, unidad_medida FROM productos WHERE id = :id FOR UPDATE");
@@ -44,10 +62,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 throw new Exception("No hay productos válidos en la venta.");
             }
 
-            $stmtVenta = $pdo->prepare("INSERT INTO ventas (total) VALUES (:total)");
-            $stmtVenta->execute([':total' => $total_venta_general]);
+            // 3. Registrar la venta vinculando el cliente_id
+            $stmtVenta = $pdo->prepare("INSERT INTO ventas (cliente_id, total) VALUES (:cliente_id, :total)");
+            $stmtVenta->execute([
+                ':cliente_id' => $cliente_id,
+                ':total' => $total_venta_general
+            ]);
             $venta_id = $pdo->lastInsertId();
 
+            // 4. Registrar detalles y actualizar stock
             foreach ($items_venta as $item) {
                 $stmtDetalle = $pdo->prepare("INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, subtotal) VALUES (:v_id, :p_id, :cant, :sub)");
                 $stmtDetalle->execute([
@@ -65,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             $pdo->commit();
-            header("Location: ver_ticket.php?id=" . $venta_id . "&cliente=" . urlencode($cliente));
+            header("Location: ver_ticket.php?id=" . $venta_id);
             exit();
 
         } catch (Exception $e) {
