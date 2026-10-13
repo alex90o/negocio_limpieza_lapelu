@@ -1,15 +1,20 @@
 <?php
 include 'conexion.php';
 
-// Obtener productos incluyendo precio de costo
+// Obtener productos
 $stmt = $pdo->query("SELECT id, nombre, stock, precio_costo, precio_unitario, unidad_medida FROM productos");
 $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener historial de ventas recientes (corrigiendo el alias de la venta)
+// Obtener la lista de clientes registrados
+$stmtClientes = $pdo->query("SELECT * FROM clientes ORDER BY nombre ASC");
+$lista_clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
+
+// Obtener historial de ventas recientes con el nombre del cliente
 $stmtHistorial = $pdo->query("
-    SELECT id as venta_id, fecha, total 
-    FROM ventas 
-    ORDER BY fecha DESC LIMIT 10
+    SELECT v.id as venta_id, v.fecha, v.total, COALESCE(c.nombre, 'Cliente General') as cliente_nombre
+    FROM ventas v
+    LEFT JOIN clientes c ON v.cliente_id = c.id
+    ORDER BY v.fecha DESC LIMIT 10
 ");
 $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -50,7 +55,7 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
     
     </header>
     <br><br><br><br>
-    <main class="fondo">
+<main class="fondo">
         
         <section id="productos">
             <h2>Productos</h2>
@@ -111,16 +116,22 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </section>
 
-       <section id="ventas">
+        <section id="ventas">
             <h2>Registro de Ventas y Facturación</h2>
             <div class="form-section">
                 <h3>Registrar Venta Múltiple</h3>
                 <form action="procesar_venta_multiple.php" method="POST">
                     
                     <label><strong>Nombre del Cliente:</strong></label>
-                    <input type="text" name="cliente_nombre" placeholder="Nombre del cliente o consumidor final" required style="margin-bottom: 15px;">
+                    <input type="text" name="cliente_nombre" list="lista-clientes" placeholder="Selecciona o escribe el nombre del cliente" required style="margin-bottom: 15px;" autocomplete="off">
+                    
+                    <datalist id="lista-clientes">
+                        <?php foreach ($lista_clientes as $c): ?>
+                            <option value="<?php echo htmlspecialchars($c['nombre']); ?>"></option>
+                        <?php endforeach; ?>
+                    </datalist>
 
-                    <label><strong>Productos de la Compra (ej. 0.5 para medio litro/kilo):</strong></label>
+                    <label><strong>Productos de la Compra:</strong></label>
                     <div id="productos-venta-container">
                         <div class="fila-producto" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <select name="producto_id[]" required style="flex: 2; margin-bottom: 0;">
@@ -134,7 +145,7 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                                 <?php endforeach; ?>
                             </select>
                             
-                            <input type="number" name="cantidad[]" placeholder="Cant. (ej: 0.5)" min="0.001" step="any" required style="flex: 1; margin-bottom: 0;">
+                            <input type="number" name="cantidad[]" placeholder="Cant." min="0.001" step="any" required style="flex: 1; margin-bottom: 0;">
                             
                             <button type="button" onclick="eliminarFilaVenta(this)" style="background-color: #e74c3c; padding: 10px; margin-bottom: 0;">X</button>
                         </div>
@@ -155,7 +166,7 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                     <?php else: ?>
                         <?php foreach ($historial_ventas as $v): ?>
                             <li>
-                                Venta #<?php echo $v['venta_id']; ?> &bull; Fecha: <?php echo $v['fecha']; ?> &bull; <strong>Total: $<?php echo number_format($v['total'], 2); ?></strong>
+                                Venta #<?php echo $v['venta_id']; ?> &bull; Cliente: <strong><?php echo htmlspecialchars($v['cliente_nombre']); ?></strong> &bull; Fecha: <?php echo $v['fecha']; ?> &bull; Total: $<?php echo number_format($v['total'], 2); ?>
                                 <a href="ver_ticket.php?id=<?php echo $v['venta_id']; ?>" target="_blank" style="margin-left: 15px; text-decoration: none; background: #3498db; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.85rem;">Ver Ticket</a>
                             </li>
                         <?php endforeach; ?>
