@@ -171,3 +171,120 @@ footer {
     color: #bdc3c7;
     font-size: 0.9rem;
 }
+/* Configuración general para evitar desbordamientos */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    /*background-color: #f4f7f6;*/
+}
+
+/* Fondo responsivo para que la imagen cubra toda la pantalla sin distorsionarse */
+.fondo {
+    /* Si tienes una imagen de fondo definida, usa esto: */
+    /* background-image: url('tu-imagen-de-fondo.png'); */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    padding: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+
+
+/* Secciones adaptables */
+section {
+    background: #ffffff;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Formularios adaptables a celulares */
+.Inventario_Actual.input, Inventario_Actual.select, Inventario_Actual.button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* Contenedor de la tabla para que tenga scroll horizontal en pantallas chicas */
+.list-section {
+    width: 100%;
+    overflow-x: auto; /* Esto evita que la tabla rompa el diseño del main */
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Asegura que no se amontone demasiado en celulares */
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    font-size: 0.9rem;
+}
+
+th {
+    background-color: #f8f9fa;
+}
+
+/* Ajustes específicos para formularios dentro de filas de tablas o celdas */
+td form {
+    display: flex;
+    gap: 5px;
+    margin: 0;
+}
+
+/* Contenedor de filas de ventas múltiples responsivo */
+.fila-producto {
+    display: flex;
+    flex-wrap: wrap; /* Se acomoda hacia abajo si el celular es muy angosto */
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.fila-producto select {
+    flex: 2;
+    min-width: 150px;
+}
+
+.fila-producto input {
+    flex: 1;
+    min-width: 80px;
+}
+
+/* Diseño responsivo para pantallas pequeñas (celulares) */
+@media (max-width: 768px) {
+    .fondo {
+        padding: 10px;
+    }
+    
+    section {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.4rem;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+}

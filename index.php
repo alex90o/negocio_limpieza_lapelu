@@ -70,7 +70,7 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
                     <button type="submit">Añadir Producto</button>
                 </form>
             </div>
-            <div class="list-section">
+            <div class="list-section Inventario_Actual">
                 <h3>Inventario Actual</h3>
                 <table id="tabla-inventario">
                     <thead>
