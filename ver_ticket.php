@@ -8,8 +8,13 @@ if ($venta_id <= 0) {
     exit();
 }
 
-// Obtener datos de la venta
-$stmtVenta = $pdo->prepare("SELECT * FROM ventas WHERE id = :id");
+// Obtener datos de la venta y cliente asociado
+$stmtVenta = $pdo->prepare("
+    SELECT v.*, COALESCE(c.nombre, 'Cliente General') as cliente_nombre 
+    FROM ventas v
+    LEFT JOIN clientes c ON v.cliente_id = c.id
+    WHERE v.id = :id
+");
 $stmtVenta->execute([':id' => $venta_id]);
 $venta = $stmtVenta->fetch(PDO::FETCH_ASSOC);
 
@@ -18,7 +23,7 @@ if (!$venta) {
     exit();
 }
 
-// Obtener los detalles de los productos de esa venta
+// Obtener detalles de productos de la venta
 $stmtDetalles = $pdo->prepare("
     SELECT dv.cantidad, dv.subtotal, p.nombre, p.precio_unitario, p.unidad_medida 
     FROM detalle_ventas dv
@@ -122,6 +127,7 @@ $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
         
         <div class="info">
             <p><strong>Fecha:</strong> <?php echo $venta['fecha']; ?></p>
+            <p><strong>Cliente:</strong> <?php echo htmlspecialchars($venta['cliente_nombre']); ?></p>
         </div>
 
         <table>
