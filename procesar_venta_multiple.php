@@ -30,13 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $total_venta_general = 0;
             $items_venta = [];
 
-            // 2. Validar stock y calcular sub-totales con el precio del momento
+            // 2. Validar stock, costos y precios del momento
             for ($i = 0; $i < count($productos_ids); $i++) {
                 $prod_id = intval($productos_ids[$i]);
                 $cant = floatval($cantidades[$i]);
 
                 if ($prod_id > 0 && $cant > 0) {
-                    $stmt = $pdo->prepare("SELECT nombre, precio_unitario, stock, unidad_medida FROM productos WHERE id = :id FOR UPDATE");
+                    $stmt = $pdo->prepare("SELECT nombre, precio_costo, precio_unitario, stock, unidad_medida FROM productos WHERE id = :id FOR UPDATE");
                     $stmt->execute([':id' => $prod_id]);
                     $prod = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -44,15 +44,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         throw new Exception("Stock insuficiente para el producto: " . ($prod['nombre'] ?? 'Desconocido'));
                     }
 
-                    $precio_momento = floatval($prod['precio_unitario']);
-                    $subtotal = $cant * $precio_momento;
+                    $precio_costo = floatval($prod['precio_costo']);
+                    $precio_venta = floatval($prod['precio_unitario']);
+                    $subtotal = $cant * $precio_venta;
                     $total_venta_general += $subtotal;
 
                     $items_venta[] = [
                         'id' => $prod_id,
                         'nombre' => $prod['nombre'],
                         'unidad_medida' => $prod['unidad_medida'],
-                        'precio' => $precio_momento,
+                        'costo' => $precio_costo,
+                        'precio' => $precio_venta,
                         'cantidad' => $cant,
                         'subtotal' => $subtotal
                     ];
@@ -71,14 +73,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ]);
             $venta_id = $pdo->lastInsertId();
 
-            // 4. Registrar detalle guardando el precio unitario del momento
+            // 4. Registrar detalle guardando precio unitario y costo
             foreach ($items_venta as $item) {
-                $stmtDetalle = $pdo->prepare("INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal) VALUES (:v_id, :p_id, :cant, :precio, :sub)");
+                $stmtDetalle = $pdo->prepare("INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, precio_costo, subtotal) VALUES (:v_id, :p_id, :cant, :precio, :costo, :sub)");
                 $stmtDetalle->execute([
                     ':v_id' => $venta_id,
                     ':p_id' => $item['id'],
                     ':cant' => $item['cantidad'],
                     ':precio' => $item['precio'],
+                    ':costo' => $item['costo'],
                     ':sub' => $item['subtotal']
                 ]);
 
