@@ -160,6 +160,7 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
 
             <div class="list-section">
                 <h3>Últimas Ventas Registradas</h3>
+                <a href="reporte_ganancias.php" style="text-decoration: none; padding: 10px 15px; background-color: #27ae60; color: white; border-radius: 4px; font-weight: bold;">📊 Ver Reporte de Ganancias</a>
                 <ul id="historial-ventas">
                     <?php if (empty($historial_ventas)): ?>
                         <p>No hay ventas registradas todavía.</p>
