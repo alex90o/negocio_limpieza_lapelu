@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $total_venta_general = 0;
             $items_venta = [];
 
-            // 2. Validar stock y calcular sub-totales
+            // 2. Validar stock y calcular sub-totales con el precio del momento
             for ($i = 0; $i < count($productos_ids); $i++) {
                 $prod_id = intval($productos_ids[$i]);
                 $cant = floatval($cantidades[$i]);
@@ -44,14 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         throw new Exception("Stock insuficiente para el producto: " . ($prod['nombre'] ?? 'Desconocido'));
                     }
 
-                    $subtotal = $cant * $prod['precio_unitario'];
+                    $precio_momento = floatval($prod['precio_unitario']);
+                    $subtotal = $cant * $precio_momento;
                     $total_venta_general += $subtotal;
 
                     $items_venta[] = [
                         'id' => $prod_id,
                         'nombre' => $prod['nombre'],
                         'unidad_medida' => $prod['unidad_medida'],
-                        'precio' => $prod['precio_unitario'],
+                        'precio' => $precio_momento,
                         'cantidad' => $cant,
                         'subtotal' => $subtotal
                     ];
@@ -62,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 throw new Exception("No hay productos válidos en la venta.");
             }
 
-            // 3. Registrar la venta vinculando el cliente_id
+            // 3. Registrar la venta
             $stmtVenta = $pdo->prepare("INSERT INTO ventas (cliente_id, total) VALUES (:cliente_id, :total)");
             $stmtVenta->execute([
                 ':cliente_id' => $cliente_id,
@@ -70,13 +71,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ]);
             $venta_id = $pdo->lastInsertId();
 
-            // 4. Registrar detalles y actualizar stock
+            // 4. Registrar detalle guardando el precio unitario del momento
             foreach ($items_venta as $item) {
-                $stmtDetalle = $pdo->prepare("INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, subtotal) VALUES (:v_id, :p_id, :cant, :sub)");
+                $stmtDetalle = $pdo->prepare("INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal) VALUES (:v_id, :p_id, :cant, :precio, :sub)");
                 $stmtDetalle->execute([
                     ':v_id' => $venta_id,
                     ':p_id' => $item['id'],
                     ':cant' => $item['cantidad'],
+                    ':precio' => $item['precio'],
                     ':sub' => $item['subtotal']
                 ]);
 

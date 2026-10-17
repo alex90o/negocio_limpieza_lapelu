@@ -8,7 +8,7 @@ if ($venta_id <= 0) {
     exit();
 }
 
-// Obtener datos de la venta y cliente asociado
+// Obtener datos de la venta y cliente
 $stmtVenta = $pdo->prepare("
     SELECT v.*, COALESCE(c.nombre, 'Cliente General') as cliente_nombre 
     FROM ventas v
@@ -23,9 +23,14 @@ if (!$venta) {
     exit();
 }
 
-// Obtener detalles de productos de la venta
+// Obtener los detalles usando el precio unitario guardado en la venta
 $stmtDetalles = $pdo->prepare("
-    SELECT dv.cantidad, dv.subtotal, p.nombre, p.precio_unitario, p.unidad_medida 
+    SELECT dv.cantidad, dv.subtotal, 
+           CASE 
+               WHEN dv.precio_unitario > 0 THEN dv.precio_unitario 
+               ELSE (dv.subtotal / dv.cantidad) 
+           END as precio_unitario,
+           p.nombre, p.unidad_medida 
     FROM detalle_ventas dv
     JOIN productos p ON dv.producto_id = p.id
     WHERE dv.venta_id = :id
