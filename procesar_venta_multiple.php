@@ -1,4 +1,12 @@
 <?php
+session_start();
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: login.php");
+    exit();
+}
+include 'conexion.php';
+?>
+<?php
 include 'conexion.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

@@ -1,4 +1,12 @@
 <?php
+session_start();
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: login.php");
+    exit();
+}
+include 'conexion.php';
+?>
+<?php
 include 'conexion.php';
 
 // Obtener productos
@@ -52,11 +60,14 @@ $historial_ventas = $stmtHistorial->fetchAll(PDO::FETCH_ASSOC);
     <header>
         
         <!--<h1>Control de Negocio de Limpieza La Pelu</h1> -->
-    
+        
     </header>
     <br><br><br><br>
 <main class="fondo">
-        
+    <div style="text-align: right; padding: 10px; background: #eceff1;border-radius: 30px;">
+    Bienvenido, <strong><?php echo htmlspecialchars($_SESSION['usuario_nombre']); ?></strong> | 
+    <a href="logout.php" style="color: #c0392b; font-weight: bold; text-decoration: none;">Cerrar Sesión</a>
+    </div>
         <section id="productos">
             <h2>Productos</h2>
             <div class="form-section">
